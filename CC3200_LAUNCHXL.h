@@ -66,8 +66,14 @@ typedef enum CC3200_LAUNCHXL_GPIOName {
      *  I2C and PWM peripherals. In order for those examples to work, these
      *  LEDs are  taken out of gpioPinCOnfig[]
      */
-    //CC3200_LAUNCHXL_LED_D6,
-    //CC3200_LAUNCHXL_LED_D5,
+    CC3200_LAUNCHXL_LED_D6,
+    CC3200_LAUNCHXL_LED_D5,
+    /* GPIO Pins are declared here*/
+    CC3200_LAUNCHXL_GPIO05,
+    CC3200_LAUNCHXL_GPIO06,
+    CC3200_LAUNCHXL_GPIO07,
+    CC3200_LAUNCHXL_GPIO08,
+    /*----------------------------*/
 
     CC3200_LAUNCHXL_GPIOCOUNT
 } CC3200_LAUNCHXL_GPIOName;

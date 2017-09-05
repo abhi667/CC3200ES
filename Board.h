@@ -59,11 +59,17 @@ extern "C" {
   *  and PWM peripherals. In order for those examples to work, these LEDs are
   *  taken out of gpioPinCOnfig[]
   */
-#define Board_LED1                   CC3200_LAUNCHXL_LED_D7
-#define Board_LED2                   CC3200_LAUNCHXL_LED_D7
+#define Board_LED1                   CC3200_LAUNCHXL_LED_D6
+#define Board_LED2                   CC3200_LAUNCHXL_LED_D5
 #define Board_BUTTON0                CC3200_LAUNCHXL_SW2
 #define Board_BUTTON1                CC3200_LAUNCHXL_SW3
 
+/* GPIO_Pin declarations*/
+#define Board_GPIO1                  CC3200_LAUNCHXL_GPIO05
+#define Board_GPIO2                  CC3200_LAUNCHXL_GPIO06
+#define Board_GPIO3                  CC3200_LAUNCHXL_GPIO07
+#define Board_GPIO4                  CC3200_LAUNCHXL_GPIO08
+/*----------------------*/
 #define Board_I2C0                   CC3200_LAUNCHXL_I2C0
 #define Board_I2C_TMP                CC3200_LAUNCHXL_I2C0
 
