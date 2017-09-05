@@ -16,6 +16,7 @@ ORDERED_OBJS += \
 "./netwifi.obj" \
 "./rom_pin_mux_config.obj" \
 "./startsntp.obj" \
+"./startupccs.obj" \
 "./subscribe_publish_sample.obj" \
 "./jsmn/jsmn.obj" \
 "./src/aws_iot_json_utils.obj" \
@@ -182,8 +183,8 @@ AWS_Publish_Subscribe.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_CMDS__QUOTED)$(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "CC3200_LAUNCHXL.obj" "UARTUtils.obj" "main.obj" "netwifi.obj" "rom_pin_mux_config.obj" "startsntp.obj" "subscribe_publish_sample.obj" "jsmn\jsmn.obj" "src\aws_iot_json_utils.obj" "src\aws_iot_mqtt_client.obj" "src\aws_iot_mqtt_client_common_internal.obj" "src\aws_iot_mqtt_client_connect.obj" "src\aws_iot_mqtt_client_publish.obj" "src\aws_iot_mqtt_client_subscribe.obj" "src\aws_iot_mqtt_client_unsubscribe.obj" "src\aws_iot_mqtt_client_yield.obj" "src\aws_iot_shadow.obj" "src\aws_iot_shadow_actions.obj" "src\aws_iot_shadow_json.obj" "src\aws_iot_shadow_records.obj" "tirtos\network_sl.obj" "tirtos\timer.obj" 
-	-$(RM) "CC3200_LAUNCHXL.d" "UARTUtils.d" "main.d" "netwifi.d" "rom_pin_mux_config.d" "startsntp.d" "subscribe_publish_sample.d" "jsmn\jsmn.d" "src\aws_iot_json_utils.d" "src\aws_iot_mqtt_client.d" "src\aws_iot_mqtt_client_common_internal.d" "src\aws_iot_mqtt_client_connect.d" "src\aws_iot_mqtt_client_publish.d" "src\aws_iot_mqtt_client_subscribe.d" "src\aws_iot_mqtt_client_unsubscribe.d" "src\aws_iot_mqtt_client_yield.d" "src\aws_iot_shadow.d" "src\aws_iot_shadow_actions.d" "src\aws_iot_shadow_json.d" "src\aws_iot_shadow_records.d" "tirtos\network_sl.d" "tirtos\timer.d" 
+	-$(RM) "CC3200_LAUNCHXL.obj" "UARTUtils.obj" "main.obj" "netwifi.obj" "rom_pin_mux_config.obj" "startsntp.obj" "startupccs.obj" "subscribe_publish_sample.obj" "jsmn\jsmn.obj" "src\aws_iot_json_utils.obj" "src\aws_iot_mqtt_client.obj" "src\aws_iot_mqtt_client_common_internal.obj" "src\aws_iot_mqtt_client_connect.obj" "src\aws_iot_mqtt_client_publish.obj" "src\aws_iot_mqtt_client_subscribe.obj" "src\aws_iot_mqtt_client_unsubscribe.obj" "src\aws_iot_mqtt_client_yield.obj" "src\aws_iot_shadow.obj" "src\aws_iot_shadow_actions.obj" "src\aws_iot_shadow_json.obj" "src\aws_iot_shadow_records.obj" "tirtos\network_sl.obj" "tirtos\timer.obj" 
+	-$(RM) "CC3200_LAUNCHXL.d" "UARTUtils.d" "main.d" "netwifi.d" "rom_pin_mux_config.d" "startsntp.d" "startupccs.d" "subscribe_publish_sample.d" "jsmn\jsmn.d" "src\aws_iot_json_utils.d" "src\aws_iot_mqtt_client.d" "src\aws_iot_mqtt_client_common_internal.d" "src\aws_iot_mqtt_client_connect.d" "src\aws_iot_mqtt_client_publish.d" "src\aws_iot_mqtt_client_subscribe.d" "src\aws_iot_mqtt_client_unsubscribe.d" "src\aws_iot_mqtt_client_yield.d" "src\aws_iot_shadow.d" "src\aws_iot_shadow_actions.d" "src\aws_iot_shadow_json.d" "src\aws_iot_shadow_records.d" "tirtos\network_sl.d" "tirtos\timer.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

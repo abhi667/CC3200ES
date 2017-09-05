@@ -18,6 +18,7 @@ C_SRCS += \
 ../netwifi.c \
 ../rom_pin_mux_config.c \
 ../startsntp.c \
+../startupccs.c \
 ../subscribe_publish_sample.c 
 
 GEN_CMDS += \
@@ -37,6 +38,7 @@ C_DEPS += \
 ./netwifi.d \
 ./rom_pin_mux_config.d \
 ./startsntp.d \
+./startupccs.d \
 ./subscribe_publish_sample.d 
 
 GEN_OPTS += \
@@ -49,6 +51,7 @@ OBJS += \
 ./netwifi.obj \
 ./rom_pin_mux_config.obj \
 ./startsntp.obj \
+./startupccs.obj \
 ./subscribe_publish_sample.obj 
 
 GEN_MISC_DIRS__QUOTED += \
@@ -61,6 +64,7 @@ OBJS__QUOTED += \
 "netwifi.obj" \
 "rom_pin_mux_config.obj" \
 "startsntp.obj" \
+"startupccs.obj" \
 "subscribe_publish_sample.obj" 
 
 C_DEPS__QUOTED += \
@@ -70,6 +74,7 @@ C_DEPS__QUOTED += \
 "netwifi.d" \
 "rom_pin_mux_config.d" \
 "startsntp.d" \
+"startupccs.d" \
 "subscribe_publish_sample.d" 
 
 GEN_FILES__QUOTED += \
@@ -83,6 +88,7 @@ C_SRCS__QUOTED += \
 "../netwifi.c" \
 "../rom_pin_mux_config.c" \
 "../startsntp.c" \
+"../startupccs.c" \
 "../subscribe_publish_sample.c" 
 
 
