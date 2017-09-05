@@ -489,7 +489,7 @@ void runAWSClient(void)
         }
 
         /*---------------------------------------------------------------------------------------------*/
-        /*jsonStruct_t SensorData;
+        jsonStruct_t SensorData;
 
         SensorData.cb = NULL;
         SensorData.pData = &AmpsRMS;
@@ -504,10 +504,10 @@ void runAWSClient(void)
         serialNumber.cb = NULL;
         serialNumber.pData = &SerialNumber;
         serialNumber.pKey = "serialNumber";
-        serialNumber.type = SHADOW_JSON_INT16;*/
+        serialNumber.type = SHADOW_JSON_INT16;
         /*---------------------------------------------------------------------------------------------*/
 
-        /*if (rc == SUCCESS) {
+        if (rc == SUCCESS) {
                         rc = aws_iot_shadow_add_reported(JsonDocumentBuffer,
                                 sizeOfJsonDocumentBuffer, 2, &SensorData,
                                 &serialNumber);}
@@ -517,22 +517,13 @@ void runAWSClient(void)
         rc = aws_iot_mqtt_publish(&client, topicName, topicNameLen,
                                   &paramsQOS0);
         SerialNumber = SerialNumber + 1;
-        Task_sleep(1000);*/
+        Task_sleep(1000);
         //-----------------------------------------------------------------------------------------------
         ts = time(NULL)+19800;
         info = localtime( &ts);
         strftime(buffer,80,"%I:%M%p", info); // for storing the time data
         //System_printf("Formatted date & time : |%s|\n", buffer );
         /*---------------------------------------------------------------------------------------------*/
-        if (rc == SUCCESS) {
-                        rc = aws_iot_shadow_add_reported(JsonDocumentBuffer,
-                                sizeOfJsonDocumentBuffer, 2, &name,
-                                &age);}
-        sprintf(cPayload, JsonDocumentBuffer);
-                    //Recalculate string len to avoid truncation in subscribe callback
-        paramsQOS0.payloadLen = strlen(cPayload);
-        rc = aws_iot_mqtt_publish(&client, topicName, topicNameLen,
-                                  &paramsQOS0);
         /*---------------------------------------------------------------------------------------------*/
         /*int ret = strcmp(AWSData,buffer);
         if(ret==0)
@@ -559,12 +550,22 @@ void runAWSClient(void)
             // for any interrupt testing use this function call.
             /*System_printf("Data aquired from AWS is: %s", AWSData);
             System_printf("Current time is: %s", buffer);*/
-            sprintf(cPayload, "Button is pressed");
+           /sprintf(cPayload, "Button is pressed");
             /* Recalculate string len to avoid truncation in subscribe callback */
             paramsQOS0.payloadLen = strlen(cPayload);
             rc = aws_iot_mqtt_publish(&client, topicName1, topicNameLen1,
                     &paramsQOS0);
             Task_sleep(1000);
+            /*if (rc == SUCCESS) {
+                            rc = aws_iot_shadow_add_reported(JsonDocumentBuffer,
+                                    sizeOfJsonDocumentBuffer, 2, &name,
+                                    &age);}
+            sprintf(cPayload, JsonDocumentBuffer);
+                        //Recalculate string len to avoid truncation in subscribe callback
+            paramsQOS0.payloadLen = strlen(cPayload);
+            rc = aws_iot_mqtt_publish(&client, topicName, topicNameLen,
+                                      &paramsQOS0);
+            Task_sleep(1000);*/
         }
 
     }
