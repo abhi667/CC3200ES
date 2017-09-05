@@ -35,9 +35,9 @@ void MQTTcallbackHandler(AWS_IoT_Client *pClient, char *topicName,
     IOT_INFO("Subscribe callback");
     IOT_INFO("%.*s\t%.*s",topicNameLen, topicName, (int)params->payloadLen,
             (char *)params->payload);
-    if(((char*)params->payload)[0] == '1')
+    if(((char*)params->payload)[0] == 'a')
         GPIO_write(Board_LED0, Board_LED_ON);
-    else if(((char*)params->payload)[0] == '0')
+    else if(((char*)params->payload)[0] == 'b')
         GPIO_write(Board_LED0, Board_LED_OFF);
 }
 
