@@ -475,8 +475,8 @@ void runAWSClient(void)
     mqttInitParams.pRootCALocation = AWS_IOT_ROOT_CA_FILENAME;
     mqttInitParams.pDeviceCertLocation = AWS_IOT_CERTIFICATE_FILENAME;
     mqttInitParams.pDevicePrivateKeyLocation = AWS_IOT_PRIVATE_KEY_FILENAME;
-    mqttInitParams.mqttCommandTimeout_ms = 500;
-    mqttInitParams.tlsHandshakeTimeout_ms = 50;
+    mqttInitParams.mqttCommandTimeout_ms = 1000;
+    mqttInitParams.tlsHandshakeTimeout_ms = 100;
     mqttInitParams.isSSLHostnameVerify = true;
     mqttInitParams.disconnectHandler = disconnectCallbackHandler;
     mqttInitParams.disconnectHandlerData = (void *)&client;
