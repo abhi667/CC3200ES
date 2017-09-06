@@ -47,10 +47,9 @@ uint32_t port = AWS_IOT_MQTT_PORT;
 uint32_t publishCount = 0;
 /* ----------------------------------------For ADC----------------------- */
 #define NO_OF_SAMPLES       128
-
 unsigned long pulAdcSamples[4096];
 
-// Driverlib includ es
+// Driverlib includes
 #include "utils.h"
 #include "hw_memmap.h"
 #include "hw_common_reg.h"
@@ -77,17 +76,12 @@ extern uVectorEntry __vector_table;
 int len ;
 char AWSData[100];  // for storing the data from AWS topic
 char buffer[80]; // forstoring the time stamp
+/*---------------------------------Declarations for AC current measurement--------------------------------------------*/
 
-//int mVperAmp = 185; //190; // For 5A
-//int mVperAmp = 100; // For 20A
-int mVperAmp = 66; // For 30A
-float Voltage = 0;
-float VRMS = 0;
-int a_value = 0 ;
-float AmpsRMS = 0.0;
-int readValue = 0;             //value read from the sensor
-int  diff = 0; // it is erence between readValue and the offset value.
-float RMS = 0.0;
+//int mVperAmp = 185;
+//int mVperAmp = 100;
+
+/*--------------------------------------------------------------------------------------------------------------------*/
 static void BoardInit(void);
 
 //*****************************************************************************
@@ -122,14 +116,100 @@ BoardInit(void)
 
     PRCMCC3200MCUInit();
 }
+/*---------------------------------------------------------------------------------*/
+//-----------------------float to string code---------
+void reverse(char *str, int len)
+{
+    int i=0, j=len-1, temp;
+    while (i<j)
+    {
+        temp = str[i];
+        str[i] = str[j];
+        str[j] = temp;
+        i++; j--;
+    }
+}
+/*-----------------------------Float to String------------------------------------------------------*/
+ // Converts a given integer x to string str[].  d is the number
+ // of digits required in output. If d is more than the number
+ // of digits in x, then 0s are added at the beginning.
+int intToStr(int x, char str[], int d)
+{
+    int i = 0;
+    while (x)
+    {
+        str[i++] = (x%10) + '0';
+        x = x/10;
+    }
 
+    // If number of digits required is more, then
+    // add 0s at the beginning
+    while (i < d)
+        str[i++] = '0';
+
+    reverse(str, i);
+    str[i] = '\0';
+    return i;
+}
+
+// Converts a floating point number to string.
+void ftoa(float n, char *AdcValue, int afterpoint)
+{
+    // Extract integer part
+    int ipart = (int)n;
+
+    // Extract floating part
+    float fpart = n - (float)ipart;
+
+    // convert integer part to string
+    int i = intToStr(ipart, AdcValue, 0);
+
+    // check for display option after point
+    if (afterpoint != 0)
+        AdcValue[i] = '.';  // add dot
+    {
+
+        // Get the value of fraction part upto given no.
+        // of points after dot. The third parameter is needed
+        // to handle cases like 233.007
+        fpart = fpart * pow(10, afterpoint);
+
+        intToStr((int)fpart, AdcValue + i + 1, afterpoint);
+    }
+}
+
+/*-----------------------------------------------------------------------*/
 
 void MQTTcallbackHandler(AWS_IoT_Client *pClient, char *topicName1,
         uint16_t topicNameLen1, IoT_Publish_Message_Params *params, void *pData)
 {
-    /*
-     * Code for the Relay Control
-     */
+    int i = 0;
+    //IOT_INFO("Subscribe callback");
+    len = (int)params->payloadLen; // message length
+    /*-------------------------------------------------------------For guidance----(Guru)----------------
+     char* ch;  // created new pointer to store data from topicname1 variable
+     for (i = 0; i < len; i++){
+        *(ch + i) = *(topicName1 + i + 3);
+        //*(v + i) = *(topicName1 + i + 3);
+        //*(ch + i) = (char)(*(params->payload + i));
+    }-------------------------------------------------------------------------------------*/
+    for (i = 0; i < len; i++){
+        AWSData[i] = *(topicName1 + i + 3);
+        //*(ch + i) = (char)(*(params->payload + i)); -----(Guru)
+    }
+    AWSData[len]='\0';
+    //---------------------------Sanity check (Guru)--------------------------
+    //v = ch;
+    /*for (i = 0; i < len; i++){
+        System_printf("****  %c  **** \n", *(ch + i));
+    }*/
+    //System_printf("****  %s yede  **** \n", data);
+    //------------------------------------------------------------------
+    //IOT_INFO("%.*s\t%.*s",topicNameLen1, topicName1, (int)params->payloadLen,
+          //(char *)params->payload);
+    /*-----------------------------------------------------------------*/
+    //System_printf("%.*s\n",(int)params->payloadLen, (char *)params->payload);
+    /*------------------------------------------------------------------------*/
     if(((char*)params->payload)[0] == 'a')
     {
         // Board_GPIO1 = PIN 60 on development board
@@ -163,81 +243,11 @@ void MQTTcallbackHandler(AWS_IoT_Client *pClient, char *topicName1,
         GPIO_write(Board_LED2, Board_LED_OFF);
         GPIO_write(Board_GPIO3, Board_LED_OFF);
         }
-    /*
-     * Here Code for the various modes
-     */
-    else if(((char*)params->payload)[0] == '0')
+    /*else if(((char*)params->payload)[0] == 'g')
     {
-        GPIO_write(Board_LED0, Board_LED_OFF);
-        GPIO_write(Board_GPIO1, Board_LED_OFF);
-        GPIO_write(Board_LED1, Board_LED_OFF);
-        GPIO_write(Board_GPIO2, Board_LED_OFF);
-        GPIO_write(Board_LED2, Board_LED_OFF);
-        GPIO_write(Board_GPIO3, Board_LED_OFF);
-    }
-    else if(((char*)params->payload)[0] == '1')
-    {
-        GPIO_write(Board_LED0, Board_LED_OFF);
-        GPIO_write(Board_GPIO1, Board_LED_OFF);
-        GPIO_write(Board_LED1, Board_LED_OFF);
-        GPIO_write(Board_GPIO2, Board_LED_OFF);
+        //---Publish this ADC value to topic---
         GPIO_write(Board_LED2, Board_LED_ON);
-        GPIO_write(Board_GPIO3, Board_LED_ON);
-    }
-    else if(((char*)params->payload)[0] == '2')
-    {
-        GPIO_write(Board_LED0, Board_LED_OFF);
-        GPIO_write(Board_GPIO1, Board_LED_OFF);
-        GPIO_write(Board_LED1, Board_LED_ON);
-        GPIO_write(Board_GPIO2, Board_LED_ON);
-        GPIO_write(Board_LED2, Board_LED_OFF);
-        GPIO_write(Board_GPIO3, Board_LED_OFF);
-    }
-    else if(((char*)params->payload)[0] == '3')
-    {
-        GPIO_write(Board_LED0, Board_LED_OFF);
-        GPIO_write(Board_GPIO1, Board_LED_OFF);
-        GPIO_write(Board_LED1, Board_LED_ON);
-        GPIO_write(Board_GPIO2, Board_LED_ON);
-        GPIO_write(Board_LED2, Board_LED_ON);
-        GPIO_write(Board_GPIO3, Board_LED_ON);
-    }
-    else if(((char*)params->payload)[0] == '4')
-    {
-        GPIO_write(Board_LED0, Board_LED_ON);
-        GPIO_write(Board_GPIO1, Board_LED_ON);
-        GPIO_write(Board_LED1, Board_LED_OFF);
-        GPIO_write(Board_GPIO2, Board_LED_OFF);
-        GPIO_write(Board_LED2, Board_LED_OFF);
-        GPIO_write(Board_GPIO3, Board_LED_OFF);
-    }
-    else if(((char*)params->payload)[0] == '5')
-    {
-        GPIO_write(Board_LED0, Board_LED_ON);
-        GPIO_write(Board_GPIO1, Board_LED_ON);
-        GPIO_write(Board_LED1, Board_LED_OFF);
-        GPIO_write(Board_GPIO2, Board_LED_OFF);
-        GPIO_write(Board_LED2, Board_LED_ON);
-        GPIO_write(Board_GPIO3, Board_LED_ON);
-    }
-    else if(((char*)params->payload)[0] == '6')
-    {
-        GPIO_write(Board_LED0, Board_LED_ON);
-        GPIO_write(Board_GPIO1, Board_LED_ON);
-        GPIO_write(Board_LED1, Board_LED_ON);
-        GPIO_write(Board_GPIO2, Board_LED_ON);
-        GPIO_write(Board_LED2, Board_LED_OFF);
-        GPIO_write(Board_GPIO3, Board_LED_OFF);
-    }
-    else if(((char*)params->payload)[0] == '7')
-    {
-        GPIO_write(Board_LED0, Board_LED_ON);
-        GPIO_write(Board_GPIO1, Board_LED_ON);
-        GPIO_write(Board_LED1, Board_LED_ON);
-        GPIO_write(Board_GPIO2, Board_LED_ON);
-        GPIO_write(Board_LED2, Board_LED_ON);
-        GPIO_write(Board_GPIO3, Board_LED_ON);
-    }
+    }*/
 }
 
 void disconnectCallbackHandler(AWS_IoT_Client *pClient, void *data)
@@ -280,7 +290,110 @@ void ShadowUpdateStatusCallback(const char *pThingName, ShadowActions_t action,
     }
 }
 /*---------------------------------------------------------------------------*/
-int  uiIndex=0;
+/*---------------------------------ADC function------------------------------*/
+float result = 0.0;
+int readValue = 0;             //value read from the sensor
+//------------------
+int mVperAmp = 66;
+float Voltage = 0;
+float VRMS = 0;
+float AmpsRMS, AmpsRMS1, AmpsRMS2, an ;
+int a_value = 0;
+int anj = 0;
+//------------------
+
+float getVPP()
+{
+
+    /*------------------------------ADC----------------------------------------*/
+
+    unsigned int  uiIndex = 0;
+    unsigned long ulSample;
+
+    //-----------------------------------------------------------------------------------
+    // Initialize Board configurations
+    //
+
+             //
+             // Configure ADC timer which is used to timestamp the ADC data samples
+             //
+             MAP_ADCTimerConfig(ADC_BASE,2^17);
+
+             //
+             // Enable ADC timer which is used to timestamp the ADC data samples
+             //
+             MAP_ADCTimerEnable(ADC_BASE);
+
+             //
+             // Enable ADC module
+             //
+             MAP_ADCEnable(ADC_BASE);
+             //
+             // Enable ADC channel
+             //
+
+             MAP_ADCChannelEnable(ADC_BASE, ADC_CH_1); // ADC pin 58 = ADC_CH_1; pin 59 = ADC_CH_2; pin 60 = ADC_CH_3.
+
+             while(uiIndex < NO_OF_SAMPLES + 4)
+             {
+                 if(MAP_ADCFIFOLvlGet(ADC_BASE, ADC_CH_1))
+                 {
+                     ulSample = MAP_ADCFIFORead(ADC_BASE, ADC_CH_1);
+                     //pulAdcSamples[uiIndex++] = ulSample;
+                     readValue = ((((ulSample >> 2 ) & 0x0FFF)));
+                     anj = readValue-1920;
+                     //a_value+= (readValue*readValue);
+                     a_value+= (anj*anj);
+                     //readValue = readValue - 1920 ;
+                     /*if (readValue <= 0)
+                     {
+                         readValue = 0;
+                     }
+                     else
+                     {
+                         a_value+= (readValue*readValue);
+                     }*/
+                     uiIndex++;
+
+                 }
+             }
+
+             MAP_ADCChannelDisable(ADC_BASE, ADC_CH_1);
+             result = (sqrt((a_value)/(NO_OF_SAMPLES))) *(1.4/4096);
+             //result = result - 0.66 ;
+             /*if(result <= 0.01)
+             {
+                 result = 0;
+             }*/
+             VRMS = (result/2.0) *0.707;
+             AmpsRMS = (VRMS * 1000)/mVperAmp ;
+             AmpsRMS1 = (VRMS * 1000)/185 ;
+             AmpsRMS1 = AmpsRMS1 - 0.08;
+             AmpsRMS1 = AmpsRMS1 - 0.14;
+             AmpsRMS2 = (VRMS * 1000)/100 ;
+             //AmpsRMS = AmpsRMS - 0.014;
+             if(AmpsRMS <=0.01)
+             {
+                 AmpsRMS = 0;
+             }
+             if(AmpsRMS1 <=0.01)
+             {
+                 AmpsRMS1 = 0;
+             }
+             if(AmpsRMS2 <=0.01)
+             {
+                 AmpsRMS2 = 0;
+             }
+             return AmpsRMS;
+
+}
+/*---------------------------------------------------------------------------*/
+int sum(int a, int b);
+int sum(int a, int b)
+{
+    int ab = a + b;
+    return ab;
+}
 
 void runAWSClient(void)
 {
@@ -296,19 +409,32 @@ void runAWSClient(void)
     size_t sizeOfJsonDocumentBuffer = sizeof(JsonDocumentBuffer)
             / sizeof(JsonDocumentBuffer[0]);
     int SerialNumber = 0; // For Serial Number
+    //------------------------------------------------------
 
-    unsigned long ulSample;
+
+    //------------------------------------------------------
+
     char AdcValue[20];
+    /*float offset = 0.640;
+    float current_value;*/
+    /*int offset = 66.7;
+    float a = 65.75 ; // it used for an example code, for rounding off the numbers.*/
 
+    float current_value;
+    int con, r_value, mul;
 
-    /*--------------------------------------------------------------------------------------------*/
+    int w,x,z;
+    float y;
+    w = 5; x = 4;
+    /*-----------------------------------------------------------------------------------------------------------*/
+
     /*-----------------------------------------------------------------------------------------------------------*/
     // code for NTP
     unsigned int ts;
     struct tm *info;
     /*-----------------------------------------------------------------------------------------------------------*/
     /*--------JsonDocumentBuffer[MAX_LENGTH_OF_UPDATE_JSON_BUFFER] = "{\"name\":\"Jay\",\"age\":23\}" ;----------*/
-    char val[10] = "Jay";
+    /*char val[10] = "Jay";
     jsonStruct_t name;
 
     name.cb = NULL;
@@ -322,9 +448,10 @@ void runAWSClient(void)
     age.cb = NULL;
     age.pData = &val1;
     age.pKey = "age";
-    age.type = SHADOW_JSON_INT8;
+    age.type = SHADOW_JSON_INT8;*/
 /*---------------------------------------------------------------------------------------------------------------*/
-
+    //startNTP();
+/*---------------------------------------------------------------------------------------------*/
     AWS_IoT_Client client;
     IoT_Client_Init_Params mqttInitParams = iotClientInitParamsDefault;
     IoT_Client_Connect_Params connectParams = iotClientConnectParamsDefault;
@@ -348,8 +475,8 @@ void runAWSClient(void)
     mqttInitParams.pRootCALocation = AWS_IOT_ROOT_CA_FILENAME;
     mqttInitParams.pDeviceCertLocation = AWS_IOT_CERTIFICATE_FILENAME;
     mqttInitParams.pDevicePrivateKeyLocation = AWS_IOT_PRIVATE_KEY_FILENAME;
-    mqttInitParams.mqttCommandTimeout_ms = 5000;
-    mqttInitParams.tlsHandshakeTimeout_ms = 500; // earlier it was 50 _ ;-) just playing with numbers
+    mqttInitParams.mqttCommandTimeout_ms = 500;
+    mqttInitParams.tlsHandshakeTimeout_ms = 50;
     mqttInitParams.isSSLHostnameVerify = true;
     mqttInitParams.disconnectHandler = disconnectCallbackHandler;
     mqttInitParams.disconnectHandlerData = (void *)&client;
@@ -359,7 +486,7 @@ void runAWSClient(void)
         IOT_ERROR("aws_iot_mqtt_init returned error : %d ", rc);
     }
 
-    connectParams.keepAliveIntervalInSec = 10 ; //earlier it was 10
+    connectParams.keepAliveIntervalInSec = 10;
     connectParams.isCleanSession = true;
     connectParams.MQTTVersion = MQTT_3_1_1;
     connectParams.pClientID = AWS_IOT_MQTT_CLIENT_ID;
@@ -393,8 +520,6 @@ void runAWSClient(void)
         IOT_ERROR("Error subscribing (%d)", rc);
     }
 
-    //System_printf("%d text",hand_done); //-------------
-
     char cPayload[500];
     sprintf(cPayload, "%s : %d ", "hello from SDK", i);
 
@@ -403,35 +528,17 @@ void runAWSClient(void)
     paramsQOS0.isRetained = 0;
 
     paramsQOS1.qos = QOS1;
-    paramsQOS1.payload = (void *)cPayload;
+    paramsQOS1.payload = (void *)cPayload; // modified
+    //paramsQOS1.payload = (void )cPayload;
     paramsQOS1.isRetained = 0;
 
     if (publishCount != 0) {
        infinitePublishFlag = false;
     }
-    /*------------------------------------------ADC----------------------------*/
 
+    /**/
 
-           //-----------------------------------------------------------------------------------
-           //
-           // Configure ADC timer which is used to timestamp the ADC data samples
-           //
-           MAP_ADCTimerConfig(ADC_BASE,2^13);
-
-           //
-           // Enable ADC timer which is used to timestamp the ADC data samples
-           //
-           MAP_ADCTimerEnable(ADC_BASE);
-
-           //
-           // Enable ADC module
-           //
-           MAP_ADCEnable(ADC_BASE);
-           //
-           // Enable ADC channel
-           //
-
-           MAP_ADCChannelEnable(ADC_BASE, ADC_CH_1); // ADC pin 58 = ADC_CH_1; pin 59 = ADC_CH_2; pin 60 = ADC_CH_3.
+    /**/
     while ((NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc ||
             SUCCESS == rc) && (publishCount > 0 || infinitePublishFlag)) {
         rc = aws_iot_mqtt_yield(&client, 100);
@@ -440,61 +547,28 @@ void runAWSClient(void)
             /* If the client is attempting to reconnect, skip rest of loop */
             continue;
         }
+
+
 /*------------------------------------------------------------------------------------*/
-
-
-        while(uiIndex < NO_OF_SAMPLES + 4)
-        {
-            if(MAP_ADCFIFOLvlGet(ADC_BASE, ADC_CH_1))
-            {
-                ulSample = MAP_ADCFIFORead(ADC_BASE, ADC_CH_1);
-                //pulAdcSamples[uiIndex++] = ulSample;
-                readValue = ((((ulSample >> 2 ) & 0x0FFF)));
-                diff = readValue - 1800 ; // earlier 1930 ....****....
-                //a_value+= (readValue*readValue);
-                a_value+= (diff*diff);
-                /*if (diff <= 0)
-                {
-                    readValue = 0;
-                }
-                else
-                {
-                    //a_value+= (readValue*readValue);
-                    a_value+= (diff*diff);
-                }*/
-
-                uiIndex++;
-
-            }
-        }
-
-        MAP_ADCChannelDisable(ADC_BASE, ADC_CH_1);
-
-        uiIndex = 0;
-        RMS = sqrt(a_value/NO_OF_SAMPLES); //-1815;
-        Voltage = (RMS)*(1.4/4096);
-        //Voltage = (sqrt((a_value/NO_OF_SAMPLES)))*(1.4/4096);
+        //GPIO_write(Board_GPIO1, Board_LED_ON);
+        //GPIO_write(Board_GPIO2, Board_LED_ON);
+        //GPIO_write(Board_GPIO3, Board_LED_ON);
+        /*Voltage = getVPP();
+        VRMS = (Voltage/2.0) *0.707;
+        AmpsRMS = (VRMS * 1000)/mVperAmp ;
+        AmpsRMS = AmpsRMS - 0.01;*/
+        //GPIO_write(Board_LED2, Board_LED_ON);
+        an = getVPP();
         a_value = 0;
-        VRMS = Voltage / sqrt(2) ;
-        if(VRMS <= 0.0001)
-        {
-            VRMS = 0.0 ;
-        }
-        AmpsRMS = (VRMS *1000)/mVperAmp ;
-        //AmpsRMS = (AmpsRMS - 0.038);
-        AmpsRMS = (AmpsRMS - 0.352);
-        if(AmpsRMS < 0.005)
-        {
-            AmpsRMS = 0;
-        }
-
-        /*---------------------------------------------------------------------------------------------*/
+        //GPIO_write(Board_LED2, Board_LED_OFF);
+        //System_printf("ADC result is %f \n", AmpsRMS);
+        //System_printf("ADC value is %f\n", a_value);
+/*------------------------------------------------------------------------------------*/
         jsonStruct_t SensorData;
 
         SensorData.cb = NULL;
-        SensorData.pData = &AmpsRMS;
-        //SensorData.pData = &a_value;
-        //SensorData.pData = &current_value;
+        //SensorData.pData = &Voltage;
+        SensorData.pData = &an;
         SensorData.pKey = "SensorData";
         SensorData.type = SHADOW_JSON_FLOAT;
 
@@ -506,7 +580,6 @@ void runAWSClient(void)
         serialNumber.pKey = "serialNumber";
         serialNumber.type = SHADOW_JSON_INT16;
         /*---------------------------------------------------------------------------------------------*/
-
         if (rc == SUCCESS) {
                         rc = aws_iot_shadow_add_reported(JsonDocumentBuffer,
                                 sizeOfJsonDocumentBuffer, 2, &SensorData,
@@ -518,12 +591,12 @@ void runAWSClient(void)
                                   &paramsQOS0);
         SerialNumber = SerialNumber + 1;
         Task_sleep(1000);
+        //GPIO_write(Board_GPIO1, Board_LED_OFF);
         //-----------------------------------------------------------------------------------------------
         ts = time(NULL)+19800;
         info = localtime( &ts);
         strftime(buffer,80,"%I:%M%p", info); // for storing the time data
         //System_printf("Formatted date & time : |%s|\n", buffer );
-        /*---------------------------------------------------------------------------------------------*/
         /*---------------------------------------------------------------------------------------------*/
         /*int ret = strcmp(AWSData,buffer);
         if(ret==0)
@@ -550,37 +623,44 @@ void runAWSClient(void)
             // for any interrupt testing use this function call.
             /*System_printf("Data aquired from AWS is: %s", AWSData);
             System_printf("Current time is: %s", buffer);*/
-           /sprintf(cPayload, "Button is pressed");
+            /***********************************************************************************/
+            /* example for rounding off the numbers
+            mul=a*10;
+            con=mul%10;
+            r_value=mul/10;
+            if(con>=5){
+            r_value=r_value+1;}
+            else {
+            r_value=r_value;}
+
+            current_value = ((r_value - offset)/4.0);
+            System_printf("The rounded value is %d\n", r_value);
+            System_printf("The current value is %f \n", current_value);*/
+            /***********************************************************************************/
+
+            //ftoa(Voltage, AdcValue, 2);
+            //sprintf(cPayload, AdcValue);
             /* Recalculate string len to avoid truncation in subscribe callback */
-            paramsQOS0.payloadLen = strlen(cPayload);
+            //paramsQOS0.payloadLen = strlen(cPayload);
+            //rc = aws_iot_mqtt_publish(&client, topicName1, topicNameLen1,
+            //        &paramsQOS0);
+            //Task_sleep(1000);
+        }
+        else if (GPIO_read(Board_LED2))
+        {
+           /* ftoa(a_value, AdcValue, 4);
+            strcat(AdcValue, " ");
+            strcat(AdcValue, buffer);
+            sprintf(cPayload,AdcValue);
+            /* Recalculate string len to avoid truncation in subscribe callback */
+            /*paramsQOS0.payloadLen = strlen(cPayload);
             rc = aws_iot_mqtt_publish(&client, topicName1, topicNameLen1,
-                    &paramsQOS0);
-            Task_sleep(1000);
-            /*if (rc == SUCCESS) {
-                            rc = aws_iot_shadow_add_reported(JsonDocumentBuffer,
-                                    sizeOfJsonDocumentBuffer, 2, &name,
-                                    &age);}
-            sprintf(cPayload, JsonDocumentBuffer);
-                        //Recalculate string len to avoid truncation in subscribe callback
-            paramsQOS0.payloadLen = strlen(cPayload);
-            rc = aws_iot_mqtt_publish(&client, topicName, topicNameLen,
                                       &paramsQOS0);
             Task_sleep(1000);*/
+            //GPIO_toggle((Board_LED2));
         }
-
     }
 
-    if (SUCCESS != rc) {
-        IOT_ERROR("An error occurred in the loop. Error code = %d\n", rc);
-    }
-    else {
-        IOT_INFO("Publish done\n");
-    }
-
-    /*------------------------------ADC----------------------------------------*/
-        //
-    // Initialize Board configurations
-    //
     BoardInit();
 
 #ifdef CC3200_ES_1_2_1
@@ -593,4 +673,12 @@ void runAWSClient(void)
         HWREG(ADC_BASE + ADC_O_ADC_SPARE1) = 0x0355AA00;
 #endif
     /*-------------------------------------------------------------------------*/
+    if (SUCCESS != rc) {
+        IOT_ERROR("An error occurred in the loop. Error code = %d\n", rc);
+    }
+    else {
+        IOT_INFO("Publish done\n");
+    }
+
+
 }
